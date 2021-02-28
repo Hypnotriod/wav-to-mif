@@ -1,2 +1,2 @@
 # wav-to-mif
-WAV file to MIF converter
+WIP: WAV file to MIF converter.  
