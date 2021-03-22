@@ -25,21 +25,31 @@ int main(int argc, char** argv) {
     size_t samplesRead;
     WavFileReader reader;
     MifFileWriter writer(MIF_WORD_WIDTH, MIF_WORDS_NUM);
+    ofstream byteArrTxt;
 
+    byteArrTxt.open("data/impulse.js");
     writer.open("data/impulse.mif");
     reader.open("data/impulse.wav");
     writer.writeHeader();
 
+    byteArrTxt << "const impulse = [" << endl;
+    
     while (true) {
         reader.read(SAMPLES_NUM, buffer, &samplesRead);
         if (samplesRead != SAMPLES_NUM) break;
         for (size_t i = 0; i < sizeof (wordBuffer); i += BYTES_PER_SAMPLE) {
             int16_t sample = buffer[i / BYTES_PER_SAMPLE] * INT16_MAX;
+            byteArrTxt << sample << ", ";
             wordBuffer[i] = (sample >> 8);
             wordBuffer[i + 1] = (sample & 0xFF);
         }
+        byteArrTxt << endl;
         if (writer.writeWord(wordBuffer) == MifFileWriter::END_OF_FILE) break;
     }
+    
+    byteArrTxt << "];" << endl;
+    byteArrTxt.close();
+    
     writer.writeEoF();
 
     return 0;
