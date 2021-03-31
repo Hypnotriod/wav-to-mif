@@ -100,7 +100,11 @@ WavFileReader::Status WavFileReader::parseHeader() {
     memcpy(header.subchunk2Id, &headerSource[36], 4);
     header.subchunk2Size = read32(headerSource, 40);
 
-    return OK;
+    return memcmp(header.chunkId, "RIFF", 4) == 0 &&
+            memcmp(header.format, "WAVE", 4) == 0 &&
+            memcmp(header.subchunk1Id, "fmt ", 4) == 0 &&
+            memcmp(header.subchunk2Id, "data", 4) == 0
+            ? OK : PARSE_ERROR;
 }
 
 size_t WavFileReader::getSamplesRead() {
