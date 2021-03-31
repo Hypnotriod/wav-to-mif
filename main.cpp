@@ -25,6 +25,13 @@ int process(const char * input, const char * output, int samplesNum, int wordsNu
         return -1;
     }
 
+    if (reader.getHeader()->bitsPerSample != 8 &&
+            reader.getHeader()->bitsPerSample != 16 &&
+            reader.getHeader()->bitsPerSample != 24) {
+        cout << "This tool only supports 8, 16 or 24 bits per sample." << endl;
+        return -1;
+    }
+
     bitsPerSample = reader.getHeader()->bitsPerSample;
     bytesPerSample = bitsPerSample / 8;
     wordBuffer = new uint8_t[samplesNum * bytesPerSample];
@@ -40,7 +47,9 @@ int process(const char * input, const char * output, int samplesNum, int wordsNu
         if (reader.getSamplesLeft())
             reader.read(samplesNum, buffer, &samplesRead);
         for (size_t i = 0; i < samplesNum * bytesPerSample; i += bytesPerSample) {
-            if (bitsPerSample == 16) {
+            if (bitsPerSample == 8) {
+                wordBuffer[i] = samplesRead ? buffer[i / bytesPerSample] * INT8_MAX : 0;
+            } else if (bitsPerSample == 16) {
                 int16_t sample = samplesRead ? buffer[i / bytesPerSample] * INT16_MAX : 0;
                 wordBuffer[i] = (sample >> 8);
                 wordBuffer[i + 1] = (sample & 0xFF);
