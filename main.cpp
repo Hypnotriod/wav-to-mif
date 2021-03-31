@@ -25,14 +25,12 @@ int process(const char * input, const char * output, int samplesNum, int wordsNu
         return -1;
     }
 
-    if (reader.getHeader()->bitsPerSample != 8 &&
-            reader.getHeader()->bitsPerSample != 16 &&
-            reader.getHeader()->bitsPerSample != 24) {
+    bitsPerSample = reader.getHeader()->bitsPerSample;
+    if (bitsPerSample != 8 && bitsPerSample != 16 && bitsPerSample != 24) {
         cout << "This tool only supports 8, 16 or 24 bits per sample." << endl;
         return -1;
     }
 
-    bitsPerSample = reader.getHeader()->bitsPerSample;
     bytesPerSample = bitsPerSample / 8;
     wordBuffer = new uint8_t[samplesNum * bytesPerSample];
 
