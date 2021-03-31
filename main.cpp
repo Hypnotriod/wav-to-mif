@@ -12,38 +12,17 @@
 
 using namespace std;
 
-int process(const char * input, const char * output, int samplesNum, int wordsNum) {
+void generate(WavFileReader * reader, MifFileWriter * writer, int samplesNum) {
     float * buffer = new float[samplesNum];
     uint8_t * wordBuffer;
-    size_t samplesRead;
-    uint32_t bytesPerSample;
-    uint32_t bitsPerSample;
-    WavFileReader reader;
-
-    if (reader.open(input) != WavFileReader::Status::OK) {
-        cout << "Input file read error!" << endl;
-        return -1;
-    }
-
-    bitsPerSample = reader.getHeader()->bitsPerSample;
-    if (bitsPerSample != 8 && bitsPerSample != 16 && bitsPerSample != 24) {
-        cout << "This tool only supports 8, 16 or 24 bits per sample." << endl;
-        return -1;
-    }
-
-    bytesPerSample = bitsPerSample / 8;
+    size_t samplesRead = 0;
+    uint32_t bitsPerSample = reader->getHeader()->bitsPerSample;
+    uint32_t bytesPerSample = bitsPerSample / 8;
     wordBuffer = new uint8_t[samplesNum * bytesPerSample];
 
-    MifFileWriter writer(samplesNum * bitsPerSample, wordsNum);
-    if (writer.open(output) != MifFileWriter::Status::OK ||
-            writer.writeHeader() != MifFileWriter::Status::OK) {
-        cout << "Can't create output file!" << endl;
-        return -1;
-    }
-
     while (true) {
-        if (reader.getSamplesLeft())
-            reader.read(samplesNum, buffer, &samplesRead);
+        if (reader->getSamplesLeft())
+            reader->read(samplesNum, buffer, &samplesRead);
         for (size_t i = 0; i < samplesNum * bytesPerSample; i += bytesPerSample) {
             if (bitsPerSample == 8) {
                 wordBuffer[i] = samplesRead ? buffer[i / bytesPerSample] * INT8_MAX : 0;
@@ -59,12 +38,37 @@ int process(const char * input, const char * output, int samplesNum, int wordsNu
             }
             if (samplesRead) samplesRead--;
         }
-        if (writer.writeWord(wordBuffer) == MifFileWriter::END_OF_FILE) break;
+        if (writer->writeWord(wordBuffer) == MifFileWriter::END_OF_FILE) break;
     }
 
-    writer.writeEoF();
+    writer->writeEoF();
     delete[] buffer;
     delete[] wordBuffer;
+}
+
+int process(const char * input, const char * output, int samplesNum, int wordsNum) {
+    uint32_t bitsPerSample;
+    WavFileReader reader;
+
+    if (reader.open(input) != WavFileReader::Status::OK) {
+        cout << "Input file read error!" << endl;
+        return -1;
+    }
+
+    bitsPerSample = reader.getHeader()->bitsPerSample;
+    if (bitsPerSample != 8 && bitsPerSample != 16 && bitsPerSample != 24) {
+        cout << "This tool only supports 8, 16 or 24 bits per sample." << endl;
+        return -1;
+    }
+
+    MifFileWriter writer(samplesNum * bitsPerSample, wordsNum);
+    if (writer.open(output) != MifFileWriter::Status::OK ||
+            writer.writeHeader() != MifFileWriter::Status::OK) {
+        cout << "Can't create output file!" << endl;
+        return -1;
+    }
+
+    generate(&reader, &writer, samplesNum);
 
     return 0;
 }
