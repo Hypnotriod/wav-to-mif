@@ -10,48 +10,78 @@
 #include "WavFileReader.h"
 #include "MifFileWriter.h"
 
-#define MIF_WORD_WIDTH  128
-#define MIF_WORDS_NUM   1024
-#define BITS_PER_SAMPLE 16
-#define BYTES_PER_SAMPLE 2
-
-#define SAMPLES_NUM (MIF_WORD_WIDTH / BITS_PER_SAMPLE)
-
 using namespace std;
 
-int main(int argc, char** argv) {
-    float buffer[SAMPLES_NUM];
-    uint8_t wordBuffer[SAMPLES_NUM * BYTES_PER_SAMPLE];
+int process(const char * input, const char * output, int samplesNum, int wordsNum) {
+    float * buffer = new float[samplesNum];
+    uint8_t * wordBuffer;
     size_t samplesRead;
+    uint32_t bytesPerSample;
+    uint32_t bitsPerSample;
     WavFileReader reader;
-    MifFileWriter writer(MIF_WORD_WIDTH, MIF_WORDS_NUM);
-    ofstream byteArrTxt;
 
-    byteArrTxt.open("data/impulse.js");
-    writer.open("data/impulse.mif");
-    reader.open("data/impulse.wav");
-    writer.writeHeader();
+    if (reader.open(input) != WavFileReader::Status::OK) {
+        cout << "Input file read error!" << endl;
+        return -1;
+    }
 
-    byteArrTxt << "const impulse = [" << endl;
-    
+    bitsPerSample = reader.getHeader()->bitsPerSample;
+    bytesPerSample = bitsPerSample / 8;
+    wordBuffer = new uint8_t[samplesNum * bytesPerSample];
+
+    MifFileWriter writer(samplesNum * bitsPerSample, wordsNum);
+    if (writer.open(output) != MifFileWriter::Status::OK ||
+            writer.writeHeader() != MifFileWriter::Status::OK) {
+        cout << "Can't create output file!" << endl;
+        return -1;
+    }
+
     while (true) {
-        reader.read(SAMPLES_NUM, buffer, &samplesRead);
-        if (samplesRead != SAMPLES_NUM) break;
-        for (size_t i = 0; i < sizeof (wordBuffer); i += BYTES_PER_SAMPLE) {
-            int16_t sample = buffer[i / BYTES_PER_SAMPLE] * INT16_MAX;
-            byteArrTxt << sample << ", ";
-            wordBuffer[i] = (sample >> 8);
-            wordBuffer[i + 1] = (sample & 0xFF);
+        if (reader.getSamplesLeft())
+            reader.read(samplesNum, buffer, &samplesRead);
+        for (size_t i = 0; i < samplesNum * bytesPerSample; i += bytesPerSample) {
+            if (bitsPerSample == 16) {
+                int16_t sample = samplesRead ? buffer[i / bytesPerSample] * INT16_MAX : 0;
+                wordBuffer[i] = (sample >> 8);
+                wordBuffer[i + 1] = (sample & 0xFF);
+            } else {
+                int32_t sample = samplesRead ? buffer[i / bytesPerSample] * INT32_MAX : 0;
+                wordBuffer[i] = (sample >> 24) & 0xFF;
+                wordBuffer[i + 1] = (sample >> 16) & 0xFF;
+                wordBuffer[i + 2] = (sample >> 8) & 0xFF;
+            }
+            if (samplesRead) samplesRead--;
         }
-        byteArrTxt << endl;
         if (writer.writeWord(wordBuffer) == MifFileWriter::END_OF_FILE) break;
     }
-    
-    byteArrTxt << "];" << endl;
-    byteArrTxt.close();
-    
+
     writer.writeEoF();
+    delete[] buffer;
+    delete[] wordBuffer;
 
     return 0;
+}
+
+int main(int argc, char** argv) {
+    int samplesNum;
+    int wordsNum;
+
+    if (argc != 5) {
+        cout << "Usage: wav-to-mif <path_to_wav_file> <path_to_mif_file> <samples_in_word_num> <words_num>" << endl;
+        return 0;
+    }
+
+    try {
+        samplesNum = stoi(argv[3]);
+        wordsNum = stoi(argv[4]);
+    } catch (invalid_argument e) {
+        cout << "Invalid arguments!" << endl;
+        return -1;
+    } catch (out_of_range e) {
+        cout << "Invalid arguments!" << endl;
+        return -1;
+    }
+
+    return process(argv[1], argv[2], samplesNum, wordsNum);
 }
 

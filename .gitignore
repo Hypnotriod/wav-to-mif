@@ -1,6 +1,6 @@
 build/
 dist/
-data/output.wav
+data/impulse.mif
 *.sfk
 .dep.inc
 *.stackdump

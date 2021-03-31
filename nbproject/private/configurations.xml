@@ -27,8 +27,15 @@
       <runprofile version="9">
         <runcommandpicklist>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" "data/impulse.wav" "impulse.mif"</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" "data/impulse.wav" "data/impulse.mif"</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" "data/impulse.wav" "data/impulse.mif" 128 1024</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" "data/impulse.wav" "data/impulse.mif" 8 1024</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" "data/impulse.wav1" "data/impulse.mif" 8 8192</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" "data/impulse.wav" "data/impulse.mif" 8 98192</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" "data/impulse.wav" "data/impulse.mif" 8 8192</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <runcommand>"${OUTPUT_PATH}" "data/impulse.wav" "data/impulse.mif" 8 8192</runcommand>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <terminal-type>0</terminal-type>
