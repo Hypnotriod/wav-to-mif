@@ -24,7 +24,7 @@ void generate(WavFileReader * reader, MifFileWriter * writer, int samplesNum) {
             reader->read(samplesNum, buffer, &samplesRead);
         for (size_t i = 0; i < samplesNum * bytesPerSample; i += bytesPerSample) {
             if (bitsPerSample == 8) {
-                wordBuffer[i] = samplesRead ? buffer[i / bytesPerSample] * INT8_MAX : 0;
+                wordBuffer[i] = samplesRead ? buffer[i] * INT8_MAX : 0;
             } else if (bitsPerSample == 16) {
                 int16_t sample = samplesRead ? buffer[i / bytesPerSample] * INT16_MAX : 0;
                 wordBuffer[i] = (sample >> 8);
