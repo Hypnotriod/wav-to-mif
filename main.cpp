@@ -13,11 +13,11 @@
 using namespace std;
 
 void generate(WavFileReader * reader, MifFileWriter * writer, int samplesNum) {
-    float * buffer = new float[samplesNum];
     size_t samplesRead = 0;
     uint32_t bitsPerSample = reader->getHeader()->bitsPerSample;
     uint32_t bytesPerSample = bitsPerSample / 8;
     uint8_t * wordBuffer = new uint8_t[samplesNum * bytesPerSample];
+    float * buffer = new float[samplesNum];
 
     while (true) {
         if (reader->getSamplesLeft())
